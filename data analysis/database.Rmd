@@ -1,0 +1,84 @@
+----
+Joseph Kim
+MediAlert Similarity Algorithm -- Database Analysis
+----
+Referenced from the DrugBank Database:
+
+Wishart DS, Feunang YD, Guo AC, Lo EJ, Marcu A, Grant JR, Sajed T, Johnson D, Li C, Sayeeda Z, Assempour N, Iynkkaran I, Liu Y, Maciejewski A, Gale N, Wilson A, Chin L, Cummings R, Le D, Pon A, Knox C, Wilson M. DrugBank 5.0: a major update to the DrugBank database for 2018. Nucleic Acids Res. 2017 Nov 8. doi: 10.1093/nar/gkx1037.
+
+The packages I used to deconstruct the first entire .xml file
+
+```{r}
+install.packages("xml2")
+install.packages("XML")
+
+library("xml2")
+library("XML")
+
+install.packages("tidyverse")
+library(tidyverse)
+```
+
+Namespace is important in the database -- without the namespace, I could not reference which tags I was looking for in terms of drugs.
+
+```{r}
+ns <- xml_ns(drug_data)
+products <- xml_find_all(drug_data, ".//"d1:product", ns)
+drugs <- xml_find_all(drug_data, ".//d1:drugs", ns)
+```
+
+Simple code to obtain the lists of products and characteristics -- first half of the similarity algorithm. 
+
+```{r}
+name <- xml_text(xml_find_first(products, ".//d1:name", ns))
+dosage_form <- xml_text(xml_find_first(products, ".//d1:dosage-form", ns))
+over_the_counter <- xml_text(xml_find_first(products, ".//d1:over-the-counter", ns))
+route <- xml_text(xml_find_first(products, ".//d1:route", ns))
+labeller <- xml_text(xml_find_first(products, ".//d1:labeller", ns))
+IsGeneric <- xml_text(xml_find_first(products, ".//d1:generic", ns))
+strength <- xml_text(xml_find_first(products, ".//d1:strength", ns))
+```
+
+Writing the first dataframe for the first half of the similarity algorithm -- finding where available alternatives to medicines can be and general descriptions.
+
+```{r}
+df <- data.frame(name, IsGeneric, route, strength, dosage_form, over_the_counter, labeller, stringsAsFactors = FALSE)
+write.csv(df, "database/dataframe1.csv", row.names = FALSE)
+```
+
+For the second half of the similarity algorithm, we are looking at the descriptions of drugs to see what conditions they treat.
+
+```{r}
+names <- xml_text(xml_find_first(drugs, ".//d1:name", ns))
+description <- xml_text(xml_find_first(drugs, ".//d1:description", ns))
+classification <- xml_text(xml_find_first(drugs, ".//d1:classification", ns))
+drug_id <- xml_text(xml_find_first(drugs, ".//d1:drugbank-id[@primary='true']", ns))
+```
+
+I also wanted to list the common product names to the corresponding drug. To do this, I created another dataframe using a for-loop that lists all product names for a drug. This will ultimately help with listing results. 
+
+```{r}
+for (i in seq_along(drugs)) {
+  prods <- xml_find_all(drugs[i], ".//d1:product", ns)
+  productNames <- xml_text(xml_find_all(prods, ".//d1:name", ns))
+  drugID <- xml_text(xml_find_first(drugs[i], ".//d1:drugbank-id[@primary='true']", ns))
+  drug_products[[drugID]] <- productNames
+}
+```
+
+Adding the products to the dataframe. We are also utilizing a mask in order to filter out duplicate drug names using the database ID's for each drug. 
+
+```{r}
+df2 <- data.frame(names, description, classification, drug_id, stringsAsFactors = FALSE)
+id_mask <- !is.na(drug_id)
+cleaned_df2 <- df2[id_mask, ]
+```
+
+Writing the data into a csv file. 
+
+```{r}
+drug_products <- drug_products[-2]
+cleaned_df2$productNames <- drug_products
+write_csv(cleaned_df2, "database/dataframe2.csv")
+```
+
