@@ -19,11 +19,11 @@ Java-based app designed to create alarms and remind users to take medications.
    Goal: to complete within 3 months (August 24th)
    
 3. BUILDING
-  Team development: me. 
+  Team development: me.
    
-4. MONITORING
-
+5. MONITORING
+   No need as this project is only to get my feet wet in Java. It will probably not be a full app on the Google Store due to the possibility that it is not approved commercially. 
    
-5. CLOSING
-
+6. CLOSING
+   Future directions would utilize the database to its fullest in all 2GB of data, as well as place importance on the drug-interactions. 
     
