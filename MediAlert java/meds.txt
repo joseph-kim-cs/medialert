@@ -1,0 +1,4 @@
+ibuprofen; NSAID; pain relief; propionic acid; 0.09
+aspirin; NSAID; pain relief; salicylic acid; 0.06
+naproxen; NSAID; arthrital pain relief; propionic acid; 0.50
+acetaminophen; analgesic; pain relief; paracetamol; 0.05
